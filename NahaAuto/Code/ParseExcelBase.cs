@@ -23,15 +23,22 @@ namespace NahaAuto.Code
                 Application = ExcelEngine.Excel;
 
                 Workbook = Application.Workbooks.Open(filePath, ExcelOpenType.Automatic);
-                Worksheet = Workbook.Worksheets[0];
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
+                ExcelEngine = null;
+                Application = null;
+                Workbook = null;
             }
         }
 
         public abstract T Parse(int row);
+
+        public virtual IWorksheet SelectWorkSheet()
+        {
+            return Workbook.Worksheets[0];
+        }
 
         public virtual IEnumerable<string> DefinedMapping()
         {
@@ -40,6 +47,11 @@ namespace NahaAuto.Code
 
         public virtual IEnumerable<T> Load()
         {
+            if (ExcelEngine == null)
+                return null;
+
+            Worksheet = SelectWorkSheet();
+
             if (Worksheet == null)
                 return null;
 

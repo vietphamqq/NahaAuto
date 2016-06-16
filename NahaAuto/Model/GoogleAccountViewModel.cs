@@ -13,6 +13,8 @@ namespace NahaAuto.Model
 
         public ICommand CreateAllAccount { get; }
 
+        public ICommand CreateRandom { get; }
+
         public GoogleAccountViewModel()
         {
             CreateAccount = new RelayCommand(() =>
@@ -26,12 +28,26 @@ namespace NahaAuto.Model
                 using (var googleAccount = new ParseAccountExcel(ExcelAccountFile))
                 {
                     var items = googleAccount.Load();
-                    Accounts = new ObservableCollection<GoogleAccountModel>(items);
+                    if (items == null)
+                    {
+                        Accounts.Clear();
+                    }
+                    else
+                    {
+                        Accounts = new ObservableCollection<GoogleAccountModel>(items);
+                    }
                 }
             });
 
             CreateAllAccount = new RelayCommand(() => {
-                
+
+            });
+
+            CreateRandom = new RelayCommand(() => {
+                using(var createRandom = new CreateAccountExcel(ExcelAccountFile))
+                {
+                    createRandom.Save();
+                }
             });
         }
 
@@ -49,7 +65,7 @@ namespace NahaAuto.Model
         }
 
 
-        private string excelAccountFile = @"C:\Users\diepnguyenv\Desktop\TemplateAccount.xlsx";
+        private string excelAccountFile = @"C:\Users\diepnguyenv\Desktop\projects\nah\NahaAuto\CreateAccount.xlsx";
 
         public string ExcelAccountFile
         {
