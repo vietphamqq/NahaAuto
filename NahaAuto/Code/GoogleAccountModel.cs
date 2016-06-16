@@ -17,5 +17,12 @@ namespace NahaAuto.Code
         public bool IsMale { get; set; }
 
         public string PhoneNumer { get; set; }
+
+        public override string ToString()
+        {
+            var genderString = IsMale ? "Male" : "Female";
+
+            return $"{FirstName } {LastName} - {genderString}";
+        }
     }
 }

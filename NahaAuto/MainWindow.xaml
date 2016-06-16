@@ -3,10 +3,63 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:NahaAuto"
+        DataContext="{Binding GoogleAccountViewModel, Source={StaticResource Locator}}"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow"
+        Height="350"
+        Width="525">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="1"
+              Margin="3">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="Excel File"
+                       Margin="5" />
+            <TextBox Grid.Column="1"
+                     Margin="5"
+                     Text="{Binding ExcelAccountFile}" />
+            <Button Grid.Column="2"
+                    Margin="5"
+                    Content="Load Account"
+                    Command="{Binding LoadExcelAccount}"
+                    HorizontalAlignment="Right" />
+        </Grid>
+        <ListBox Grid.Row="2"
+                 ItemsSource="{Binding Accounts}"
+                 SelectedItem="{Binding CurrentItem}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <TextBlock Text="{Binding FirstName}" />
+                        <TextBlock Text="{Binding LastName}" />
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <StackPanel Grid.Row="3"
+                    HorizontalAlignment="Right"
+                    Orientation="Horizontal">
+
+                    <Button Margin="5"
+                    Content="Create All Account"
+                    Command="{Binding CreateAllAccount}"
+                    HorizontalAlignment="Right" />
+
+            <Button Margin="5"
+                    Content="Create Selected Account"
+                    Command="{Binding CreateAccount}"
+                    HorizontalAlignment="Right" />
+        </StackPanel>
     </Grid>
 </Window>

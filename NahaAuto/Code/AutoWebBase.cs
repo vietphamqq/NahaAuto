@@ -15,6 +15,11 @@ namespace NahaAuto.Code
 
         protected IWebDriver Driver { get; set; }
 
+        public void Close()
+        {
+            Driver.Close();
+        }
+
         public abstract void Setup();
 
         public void RetryOnTimeout(Action executable)
@@ -63,19 +68,9 @@ namespace NahaAuto.Code
             Driver.Manage().Window.Maximize();
         }
 
-        public void ClickOn(string linkText, int timeoutInSeconds = DefaultTimeout)
+        public string GetAttributeFrom(By selector, string attributeName, int timeoutInSeconds = DefaultTimeout)
         {
-            RetryOnStale(() => Driver.FindElement(By.LinkText(linkText), timeoutInSeconds).Click());
-        }
-
-        public string GetAttributeFrom(string linkTextToFind, string attributeName, int timeoutInSeconds = DefaultTimeout)
-        {
-            return RetryOnStale(() => Driver.FindElement(By.LinkText(linkTextToFind), timeoutInSeconds).GetAttribute(attributeName));
-        }
-
-        public string GetAttributeFrom(By locator, string attributeName, int timeoutInSeconds = DefaultTimeout)
-        {
-            return RetryOnStale(() => Driver.FindElement(locator, timeoutInSeconds).GetAttribute(attributeName));
+            return RetryOnStale(() => Driver.FindElement(selector, timeoutInSeconds).GetAttribute(attributeName));
         }
 
         public string GetTextFrom(By selector, int timeoutInSeconds = DefaultTimeout)
@@ -88,46 +83,30 @@ namespace NahaAuto.Code
             RetryOnStale(() => Driver.FindElement(selector, timeoutInSeconds).Clear());
         }
 
-        public void EnterTextIn(By locator, string text, int timeoutInSeconds = DefaultTimeout)
+        public void EnterTextIn(By selector, string text, int timeoutInSeconds = DefaultTimeout)
         {
-            RetryOnStale(() => Driver.FindElement(locator, timeoutInSeconds).SendKeys(text));
+            RetryOnStale(() => Driver.FindElement(selector, timeoutInSeconds).SendKeys(text));
         }
 
-        public void ClickOn(By locator, int timeoutInSeconds = DefaultTimeout)
+        public void ClickOn(By selector, int timeoutInSeconds = DefaultTimeout)
         {
-            RetryOnStale(() => Driver.FindElement(locator, timeoutInSeconds).Click());
+            RetryOnStale(() => Driver.FindElement(selector, timeoutInSeconds).Click());
         }
 
-        public void SelectFrom(string byName, string text, int timeoutInSeconds = DefaultTimeout)
+        public void SelectFrom(By selector, string text, int timeoutInSeconds = DefaultTimeout)
         {
-            RetryOnStale(() => new SelectElement(Driver.FindElement(By.Name(byName), timeoutInSeconds)).SelectByText(text));
+            RetryOnStale(() => new SelectElement(Driver.FindElement(selector, timeoutInSeconds)).SelectByText(text));
             WaitForPageReload();
         }
 
-        public void SelectFrom(string byName, int index, int timeoutInSeconds = DefaultTimeout)
+        public void SelectCheckbox(By selector, int timeoutInSeconds = DefaultTimeout)
         {
-            RetryOnStale(() => new SelectElement(Driver.FindElement(By.Name(byName), timeoutInSeconds)).SelectByIndex(index));
-            WaitForPageReload();
-        }
-
-        public void SelectCheckbox(By locator, int timeoutInSeconds = DefaultTimeout)
-        {
-            RetryOnStale(() => Checkbox(true, Driver.FindElement(locator, timeoutInSeconds)));
-        }
-
-        public void SelectCheckbox(IWebElement checkbox)
-        {
-            Checkbox(true, checkbox);
+            RetryOnStale(() => Checkbox(true, Driver.FindElement(selector, timeoutInSeconds)));
         }
 
         public void DeselectCheckbox(By selector, int timeoutInSeconds = DefaultTimeout)
         {
             RetryOnStale(() => Checkbox(false, Driver.FindElement(selector, timeoutInSeconds)));
-        }
-
-        public void DeselectCheckbox(IWebElement checkbox)
-        {
-            Checkbox(false, checkbox);
         }
 
         private void Checkbox(bool isSelected, IWebElement checkbox)
@@ -139,9 +118,14 @@ namespace NahaAuto.Code
             checkbox.Click();
         }
 
-        public void ScrollToElement(IWebElement element)
+        public void ScrollToElement(By selector, int timeoutInSeconds = DefaultTimeout)
         {
-            // Down arrow is clicked to ensure element is not hidden by the bottom nav bar.
+            ScrollToElement(Driver.FindElement(selector, timeoutInSeconds));
+        }
+
+        private void ScrollToElement(IWebElement element)
+        {
+            // Down arrow is clicked to ensure element is not hidden by the bottom navigation bar.
             RetryOnStale(() => new Actions(Driver).MoveToElement(element).SendKeys(Keys.ArrowDown).Perform());
         }
 
@@ -154,25 +138,15 @@ namespace NahaAuto.Code
                     .Perform());
         }
 
-        public int GetCountOf(string linkText, int timeoutInSeconds = DefaultTimeout)
+        public int GetCountOf(By selector, int timeoutInSeconds = DefaultTimeout)
         {
-            return RetryOnStale(() => Driver.FindElements(By.LinkText(linkText), timeoutInSeconds).Count);
+            return RetryOnStale(() => Driver.FindElements(selector, timeoutInSeconds).Count);
         }
 
-        public int GetCountOf(string linkText, Func<IWebElement, bool> where, int timeoutInSeconds = DefaultTimeout)
-        {
-            return RetryOnStale(() => Driver.FindElements(By.LinkText(linkText), timeoutInSeconds).Count(where));
-        }
-
-        public int GetCountOf(By locator, int timeoutInSeconds = DefaultTimeout)
-        {
-            return RetryOnStale(() => Driver.FindElements(locator, timeoutInSeconds).Count);
-        }
-
-        public void WaitTillVisible(string idToFind, int timeoutInSeconds = DefaultTimeout)
+        public void WaitTillVisible(By selector, int timeoutInSeconds = DefaultTimeout)
         {
             new WebDriverWait(Driver, TimeSpan.FromSeconds(timeoutInSeconds)).Until(
-                ExpectedConditions.ElementIsVisible(By.Id(idToFind)));
+                ExpectedConditions.ElementIsVisible(selector));
         }
 
         public void WaitForPopup()
@@ -180,10 +154,10 @@ namespace NahaAuto.Code
             new WebDriverWait(Driver, TimeSpan.FromSeconds(DefaultTimeout)).Until(d => d.WindowHandles.Count > 1);
         }
 
-        public void Wait()
+        public void Wait(int inMilSecond)
         {
-            //new WebDriverWait(Driver, TimeSpan.FromSeconds(DefaultTimeout)).Until(d => d.WindowHandles.Count > 1);
-            Thread.Sleep(1000);
+            //new WebDriverWait(Driver, TimeSpan.FromSeconds(inMilSecond)).Until(d => false);
+            Thread.Sleep(inMilSecond);
         }
 
         public void WaitForPageReload()
@@ -193,13 +167,10 @@ namespace NahaAuto.Code
 
         public void WaitForPageReload(int maxWaitTimeInSeconds)
         {
-            // this method has been blatantly plaigiarised from stack overflow.
-            string state = string.Empty;
+            var state = string.Empty;
             try
             {
-                WebDriverWait wait = new WebDriverWait(Driver, TimeSpan.FromSeconds(maxWaitTimeInSeconds));
-
-                //Checks every 500 ms whether predicate returns true if returns exit otherwise keep trying till it returns ture
+                var wait = new WebDriverWait(Driver, TimeSpan.FromSeconds(maxWaitTimeInSeconds));
                 wait.Until(
                     d =>
                     {
@@ -215,7 +186,7 @@ namespace NahaAuto.Code
                         }
                         catch (NoSuchWindowException)
                         {
-                            //when popup is closed, switch to last windows
+                            //when pop-up is closed, switch to last windows
                             Driver.SwitchTo().Window(Driver.WindowHandles.Last());
                         }
                         //In IE7 there are chances we may get state as loaded instead of complete
@@ -254,8 +225,7 @@ namespace NahaAuto.Code
 
         public void AcceptAlert()
         {
-            int timeout = DefaultTimeout;
-            AcceptAlert(timeout);
+            AcceptAlert(DefaultTimeout);
         }
 
         public void AcceptAlert(int timeout)

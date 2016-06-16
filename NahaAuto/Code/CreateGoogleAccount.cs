@@ -5,6 +5,8 @@ namespace NahaAuto.Code
 {
     public abstract class CreateGoogleAccount : AutoWebBase, ITaskRunner<GoogleAccountModel>
     {
+        Action<Status> Notification;
+
         public void DoTask(GoogleAccountModel model)
         {
             Setup();
@@ -29,12 +31,19 @@ namespace NahaAuto.Code
             SelectCheckbox(By.Id("TermsOfService"));
 
             //ClickOn(By.Id("submitbutton"));
+
+            //Close();
+        }
+
+        public void Process(Action<Status> notification)
+        {
+            Notification = notification;
         }
 
         private void ChooseBirthDay(DateTime birthDay)
         {
             ClickOn(By.Id("BirthMonth"));
-            Wait();
+            Wait(500);
             ClickOn(By.Id(":" + birthDay.Month.ToString("X").ToLower()));
 
             EnterTextIn(By.Id("BirthDay"), Convert.ToString(birthDay.Day));
@@ -44,8 +53,10 @@ namespace NahaAuto.Code
         private void ChooseGender(bool isMale)
         {
             ClickOn(By.Id("Gender"));
-            Wait();
+            Wait(500);
             ClickOn(By.Id(isMale ? ":f" : ":e"));
         }
+
+
     }
 }
