@@ -43,14 +43,12 @@
             </StackPanel>
         </Grid>
         <ListBox Grid.Row="2"
-                 ItemsSource="{Binding Accounts}"
                  SelectedItem="{Binding CurrentItem}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
-                    <StackPanel>
-                        <TextBlock Text="{Binding FirstName}" />
-                        <TextBlock Text="{Binding LastName}" />
-                    </StackPanel>
+                    <Grid>
+                        <TextBlock Text="{Binding FirstName}"/>
+                    </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
@@ -61,7 +59,8 @@
             <Button Margin="5"
                     Content="Create Random Excel Account"
                     Click="RandomCreation_Click"
-                    HorizontalAlignment="Right" />
+                    HorizontalAlignment="Right"
+                    Style="{DynamicResource ButtonStyle1}" />
 
             <Button Margin="5"
                     Content="Create All Account"

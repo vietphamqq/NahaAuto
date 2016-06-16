@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.IO;
 using System.Windows.Input;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
@@ -44,10 +46,13 @@ namespace NahaAuto.Model
             });
 
             CreateRandom = new RelayCommand(() => {
-                using(var createRandom = new CreateAccountExcel(ExcelAccountFile))
+                var filePath = Path.GetDirectoryName(ExcelAccountFile) + $@"\{DateTime.Now.ToString("yyyy-mm-dd HHMMss")}.xlsx";
+                using (var createRandom = new CreateAccountExcel(ExcelAccountFile))
                 {
-                    createRandom.Save();
+                    createRandom.Save(filePath);
                 }
+
+                System.Diagnostics.Process.Start(filePath);
             });
         }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Syncfusion.XlsIO;
 using System.Linq;
+using Humanizer;
 
 namespace NahaAuto.Code
 {
@@ -17,9 +18,10 @@ namespace NahaAuto.Code
             return Workbook.Worksheets[1];
         }
 
-        public void Save()
+        public void Save(string filePath)
         {
-            var items = CreateRadom();
+            var items = CreateRadom()?.Select(x => new { Order = new Random().Next(1000), Item = x }).OrderBy(x => x.Order).Select(x => x.Item).ToList();
+
             var workSheet = Workbook.Worksheets[0];
 
             var rowIndex = 4;
@@ -30,12 +32,12 @@ namespace NahaAuto.Code
                 workSheet[rowIndex, 3].Value2 = item.UserName;
                 workSheet[rowIndex, 4].Value2 = item.Password;
                 workSheet[rowIndex, 5].Value2 = item.BirthDay;
-                workSheet[rowIndex, 6].Value2 = item.IsMale;
+                workSheet[rowIndex, 6].Value2 = item.IsMale.ToString().ToUpper();
                 workSheet[rowIndex, 7].Value2 = item.PhoneNumer;
                 rowIndex++;
             }
 
-            Workbook.SaveAs(@"D:\a.xlsx");
+            Workbook.SaveAs(filePath);
         }
 
         public List<GoogleAccountModel> CreateRadom()
@@ -44,10 +46,9 @@ namespace NahaAuto.Code
             if ((items?.Count() ?? 0) == 0)
                 return null;
 
-
             var itemsResult = new List<GoogleAccountModel>();
-            var maleAccounts = FilterAccount(items?.SelectMany(x => x).Where(x => x.IsMale));
-            var femaleAccounts = FilterAccount(items?.SelectMany(x => x).Where(x => !x.IsMale));
+            var maleAccounts = FilterAccount(items?.SelectMany(x => x).Where(x => x.IsMale),true);
+            var femaleAccounts = FilterAccount(items?.SelectMany(x => x).Where(x => !x.IsMale), false);
 
             itemsResult.AddRange(maleAccounts);
             itemsResult.AddRange(femaleAccounts);
@@ -55,7 +56,7 @@ namespace NahaAuto.Code
             return itemsResult;
         }
 
-        private List<GoogleAccountModel> FilterAccount(IEnumerable<RandomAccountModel> accounts)
+        private List<GoogleAccountModel> FilterAccount(IEnumerable<RandomAccountModel> accounts, bool isMale)
         {
             if (accounts == null)
                 return null;
@@ -63,10 +64,10 @@ namespace NahaAuto.Code
             var firstName = accounts.Select(x => x.FirstName).Where(x => !string.IsNullOrWhiteSpace(x));
             var lastName = accounts.Select(x => x.LastName).Where(x => !string.IsNullOrWhiteSpace(x));
             var midName = accounts.Select(x => x.MidName).Where(x => !string.IsNullOrWhiteSpace(x));
-            var from = accounts.Where(x=>x.FromYear>0).Min(x => x.FromYear);
+            var from = accounts.Where(x=>x.FromYear > 0).Min(x => x.FromYear);
             var to = accounts.Where(x => x.ToYear > 0).Max(x => x.ToYear);
 
-            var maleAccounts = CreateAccount(true, firstName, midName, lastName, from, to);
+            var maleAccounts = CreateAccount(isMale, firstName, midName, lastName, from, to);
 
             return maleAccounts;
         }
@@ -74,14 +75,14 @@ namespace NahaAuto.Code
         private List<GoogleAccountModel> CreateAccount(bool isMale, IEnumerable<string> fNames, IEnumerable<string> mNames, IEnumerable<string> lNames, int fromYear, int toYear)
         {
             return (from fname in fNames
-                    from midName in mNames
-                    from lName in lNames
+                    from midName in mNames.Where(x => x != fname)
+                    from lName in lNames.Where(x=>x!=midName && x!=fname)
 
                     let birthDay = new DateTime(new Random().Next(fromYear, toYear), new Random().Next(1, 12), new Random().Next(1, 28))
                     select new GoogleAccountModel
                     {
-                        FirstName = fname,
-                        LastName = midName + " " + lName,
+                        FirstName = fname.Humanize(LetterCasing.Title),
+                        LastName = midName.Humanize(LetterCasing.Title) + " " + lName.Humanize(LetterCasing.Title),
                         UserName = $@"{fname.ToLower()}.{lName}{midName}.{birthDay.ToString("yyMMdd")}{fname.First()}{midName.First()}{lName.First()}".ToLower().Replace(" ", ""),
                         BirthDay = birthDay,
                         IsMale = isMale,
