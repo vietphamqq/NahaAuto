@@ -7,7 +7,7 @@
         mc:Ignorable="d"
         Title="MainWindow"
         Height="350"
-        Width="525">
+        Width="694.068">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -43,11 +43,12 @@
             </StackPanel>
         </Grid>
         <ListBox Grid.Row="2"
+                 ItemsSource="{Binding Accounts}"
                  SelectedItem="{Binding CurrentItem}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid>
-                        <TextBlock Text="{Binding FirstName}"/>
+                        <TextBlock Text="{Binding}"/>
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>

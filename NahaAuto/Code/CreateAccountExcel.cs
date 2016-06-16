@@ -20,7 +20,10 @@ namespace NahaAuto.Code
 
         public void Save(string filePath)
         {
-            var items = CreateRadom()?.Select(x => new { Order = new Random().Next(1000), Item = x }).OrderBy(x => x.Order).Select(x => x.Item).ToList();
+            if (ExcelEngine == null)
+                return;
+
+            var items = CreateRadom();
 
             var workSheet = Workbook.Worksheets[0];
 
@@ -42,13 +45,13 @@ namespace NahaAuto.Code
 
         public List<GoogleAccountModel> CreateRadom()
         {
-            var items = Load();
+            var items = Load()?.SelectMany(x => x);
             if ((items?.Count() ?? 0) == 0)
                 return null;
 
             var itemsResult = new List<GoogleAccountModel>();
-            var maleAccounts = FilterAccount(items?.SelectMany(x => x).Where(x => x.IsMale),true);
-            var femaleAccounts = FilterAccount(items?.SelectMany(x => x).Where(x => !x.IsMale), false);
+            var maleAccounts = FilterAccount(items?.Where(x => x.IsMale),true);
+            var femaleAccounts = FilterAccount(items?.Where(x => !x.IsMale), false);
 
             itemsResult.AddRange(maleAccounts);
             itemsResult.AddRange(femaleAccounts);
@@ -75,8 +78,8 @@ namespace NahaAuto.Code
         private List<GoogleAccountModel> CreateAccount(bool isMale, IEnumerable<string> fNames, IEnumerable<string> mNames, IEnumerable<string> lNames, int fromYear, int toYear)
         {
             return (from fname in fNames
-                    from midName in mNames.Where(x => x != fname)
-                    from lName in lNames.Where(x=>x!=midName && x!=fname)
+                    from lName in lNames.Where(x=>x!=fname)
+                    from midName in mNames.Where(x => x != fname && x!=lName)
 
                     let birthDay = new DateTime(new Random().Next(fromYear, toYear), new Random().Next(1, 12), new Random().Next(1, 28))
                     select new GoogleAccountModel
