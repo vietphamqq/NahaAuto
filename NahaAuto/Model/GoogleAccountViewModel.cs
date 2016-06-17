@@ -80,12 +80,12 @@ namespace NahaAuto.Model
         {
             var regex = new Regex(@"\d+");
 
-            new WebClient().DownloadFile(url, @"./file.jpg");
+            new WebClient().DownloadFile(url, @"./capcha_cache.jpg");
             try
             {
                 using (var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default))
                 {
-                    using (var img = Pix.LoadFromFile(@"./file.jpg"))
+                    using (var img = Pix.LoadFromFile(@"./capcha_cache.jpg"))
                     {
                         using (var page = engine.Process(img))
                         {
