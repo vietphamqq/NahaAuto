@@ -22,6 +22,9 @@ namespace NahaAuto.Code
                     d =>
                         {
                             var element = driver.FindElement(by);
+                            if (element == null)
+                                return null;
+
                             if (element.Displayed && (element.Enabled || allowDisabled))
                             {
                                 return element;

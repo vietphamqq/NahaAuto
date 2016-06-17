@@ -1,13 +1,35 @@
 ﻿using OpenQA.Selenium;
 using System;
+using System.Threading.Tasks;
 
 namespace NahaAuto.Code
 {
     public abstract class CreateGoogleAccount : AutoWebBase, ITaskRunner<GoogleAccountModel>
     {
-        Action<Status> Notification;
+        private Action<Status> Notification;
+        private Action<string> openCapchaWindow;
+        private Func<string, string> extractTextFromImage;
 
-        public void DoTask(GoogleAccountModel model)
+        public bool IsEnterCapchaByHand { get; set; } = false;
+
+        public void ActionIfCapchaByHand(Action<string> openCapchaWindow)
+        {
+            this.openCapchaWindow = openCapchaWindow;
+        }
+
+        public void CapchaParser(Func<string, string> extractTextFromImage)
+        {
+            this.extractTextFromImage = extractTextFromImage;
+        }
+
+        private TaskCompletionSource<string> completeParseCapcha;
+
+        public void SetCapchaByHand(string value)
+        {
+            completeParseCapcha.SetResult(value);
+        }
+
+        public async Task DoTask(GoogleAccountModel model)
         {
             Setup();
             GoToUrl(@"https://accounts.google.com/signup");
@@ -16,8 +38,6 @@ namespace NahaAuto.Code
             EnterTextIn(By.Id("LastName"), model.LastName);
             EnterTextIn(By.Id("GmailAddress"), model.UserName);
 
-            var password = Guid.NewGuid().ToString("N").ToLower();
-                                    
             EnterTextIn(By.Id("Passwd"), model.Password);
             EnterTextIn(By.Id("PasswdAgain"), model.Password);
 
@@ -26,7 +46,29 @@ namespace NahaAuto.Code
 
             EnterTextIn(By.Id("RecoveryPhoneNumber"), model.PhoneNumer);
 
-            EnterTextIn(By.Id("recaptcha_response_field"), "0177");
+            var textCapcha = string.Empty;
+
+            if (!IsEnterCapchaByHand)
+            {
+                var tryTime = 0;
+                while (string.IsNullOrEmpty(textCapcha) && tryTime++ < 100)
+                {
+                    if (tryTime > 1)
+                    {
+                        ClickOn(By.Id("recaptcha_reload_btn"));
+                        Wait(1000);
+                    }
+
+                    textCapcha = extractTextFromImage.Invoke(GetAttributeFrom(By.Id("recaptcha_challenge_image"), "src"));
+                }
+            }
+            else
+            {
+                openCapchaWindow?.Invoke(GetAttributeFrom(By.Id("recaptcha_image"), "src"));
+                textCapcha = await completeParseCapcha.Task;
+            }
+
+            EnterTextIn(By.Id("recaptcha_response_field"), textCapcha);
 
             SelectCheckbox(By.Id("TermsOfService"));
 
@@ -56,7 +98,5 @@ namespace NahaAuto.Code
             Wait(500);
             ClickOn(By.Id(isMale ? ":f" : ":e"));
         }
-
-
     }
 }

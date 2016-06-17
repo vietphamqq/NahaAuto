@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Net;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows.Input;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using NahaAuto.Code;
+using Tesseract;
+
 namespace NahaAuto.Model
 {
     public class GoogleAccountViewModel : ViewModelBase
@@ -21,10 +26,11 @@ namespace NahaAuto.Model
         {
             Errors = new ObservableCollection<string>();
 
-            CreateAccount = new RelayCommand(() =>
+            CreateAccount = new RelayCommand(async () =>
             {
                 var runner = new CreateGoogleAccountRunner();
-                runner.DoTask(CurrentItem);
+                runner.CapchaParser(ExtractTextFromImage);
+                await runner.DoTask(CurrentItem);
             });
 
             LoadExcelAccount = new RelayCommand(() =>
@@ -33,11 +39,14 @@ namespace NahaAuto.Model
                 {
                     var items = googleAccount.Load();
 
-                    var errors =  googleAccount.Errors;
+                    var errors = googleAccount.Errors;
                     Errors.Clear();
-                    foreach(var error in errors)
+                    if (errors != null)
                     {
-                        Errors.Add(error);
+                        foreach (var error in errors)
+                        {
+                            Errors.Add(error);
+                        }
                     }
 
                     if (items == null)
@@ -51,11 +60,12 @@ namespace NahaAuto.Model
                 }
             });
 
-            CreateAllAccount = new RelayCommand(() => {
-
+            CreateAllAccount = new RelayCommand(() =>
+            {
             });
 
-            CreateRandom = new RelayCommand(() => {
+            CreateRandom = new RelayCommand(() =>
+            {
                 var filePath = Path.GetDirectoryName(ExcelAccountFile) + $@"\{DateTime.Now.ToString("yyyy-mm-dd HHMMss")}.xlsx";
                 using (var createRandom = new CreateAccountExcel(ExcelAccountFile))
                 {
@@ -66,9 +76,44 @@ namespace NahaAuto.Model
             });
         }
 
+        public string ExtractTextFromImage(string url)
+        {
+            var regex = new Regex(@"\d+");
+
+            new WebClient().DownloadFile(url, @"./file.jpg");
+            try
+            {
+                using (var engine = new TesseractEngine(@"./tessdata", "eng", EngineMode.Default))
+                {
+                    using (var img = Pix.LoadFromFile(@"./file.jpg"))
+                    {
+                        using (var page = engine.Process(img))
+                        {
+                            var text = page.GetText();
+
+                            var match = regex.Match(text ?? "");
+                            if (match.Success && match.Value.Length >= 3)
+                            {
+                                return match.Value;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Unexpected Error: " + e.Message);
+                Console.WriteLine("Details: ");
+                Console.WriteLine(e.ToString());
+            }
+
+            return string.Empty;
+        }
+
         public ObservableCollection<string> Errors { get; }
 
         public ObservableCollection<GoogleAccountModel> accounts;
+
         public ObservableCollection<GoogleAccountModel> Accounts
         {
             get
@@ -81,8 +126,7 @@ namespace NahaAuto.Model
             }
         }
 
-
-        private string excelAccountFile = @"C:\Users\diepnguyenv\Desktop\projects\nah\NahaAuto\CreateAccount.xlsx";
+        private string excelAccountFile = @"C:\Users\diepnguyenv\Desktop\projects\nah\NahaAuto\Template\CreateAccount.xlsx";
 
         public string ExcelAccountFile
         {
