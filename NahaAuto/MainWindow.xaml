@@ -44,15 +44,33 @@
         </Grid>
         <ListBox Grid.Row="2"
                  ItemsSource="{Binding Accounts}"
-                 SelectedItem="{Binding CurrentItem}">
+                 SelectedItem="{Binding CurrentItem}"
+                 Visibility="{Binding Accounts.Count, Converter={StaticResource EmptyListToCollapsedConverter}}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <Grid>
-                        <TextBlock Text="{Binding}"/>
+                        <TextBlock Text="{Binding}" />
                     </Grid>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+
+        <TextBlock Text="Errors"
+                   Grid.Row="2"
+                   Visibility="{Binding Errors.Count,Converter={StaticResource EmptyListToCollapsedConverter}}" />
+        <ListBox Grid.Row="2"
+                 Margin="0,40,0,0"
+                 Visibility="{Binding Errors.Count,Converter={StaticResource EmptyListToCollapsedConverter}}"
+                 ItemsSource="{Binding Errors}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Grid>
+                        <TextBlock Text="{Binding}" />
+                    </Grid>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
         <StackPanel Grid.Row="3"
                     HorizontalAlignment="Right"
                     Orientation="Horizontal">
@@ -60,8 +78,7 @@
             <Button Margin="5"
                     Content="Create Random Excel Account"
                     Click="RandomCreation_Click"
-                    HorizontalAlignment="Right"
-                    Style="{DynamicResource ButtonStyle1}" />
+                    HorizontalAlignment="Right" />
 
             <Button Margin="5"
                     Content="Create All Account"

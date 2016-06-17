@@ -121,6 +121,9 @@
     <Compile Include="Code\ParseAccountExcel.cs" />
     <Compile Include="Code\ParseExcelBase.cs" />
     <Compile Include="Code\RandomAccountModel.cs" />
+    <Compile Include="Converter\CountToVisibilityConverter.cs" />
+    <Compile Include="Converter\VisibilityInversionConverter.cs" />
+    <Compile Include="Converter\BoolToVisibilityConverter.cs" />
     <Compile Include="Model\GoogleAccountViewModel.cs" />
     <Compile Include="RandomAccountWindow.xaml.cs">
       <DependentUpon>RandomAccountWindow.xaml</DependentUpon>

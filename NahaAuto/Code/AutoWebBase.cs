@@ -9,8 +9,6 @@ namespace NahaAuto.Code
 {
     public abstract class AutoWebBase
     {
-        public static string DownloadFolder;
-
         private const int DefaultTimeout = 30;
 
         protected IWebDriver Driver { get; set; }

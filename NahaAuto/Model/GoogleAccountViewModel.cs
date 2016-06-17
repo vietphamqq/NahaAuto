@@ -19,6 +19,8 @@ namespace NahaAuto.Model
 
         public GoogleAccountViewModel()
         {
+            Errors = new ObservableCollection<string>();
+
             CreateAccount = new RelayCommand(() =>
             {
                 var runner = new CreateGoogleAccountRunner();
@@ -30,9 +32,17 @@ namespace NahaAuto.Model
                 using (var googleAccount = new ParseAccountExcel(ExcelAccountFile))
                 {
                     var items = googleAccount.Load();
+
+                    var errors =  googleAccount.Errors;
+                    Errors.Clear();
+                    foreach(var error in errors)
+                    {
+                        Errors.Add(error);
+                    }
+
                     if (items == null)
                     {
-                        Accounts.Clear();
+                        Accounts?.Clear();
                     }
                     else
                     {
@@ -55,6 +65,8 @@ namespace NahaAuto.Model
                 System.Diagnostics.Process.Start(filePath);
             });
         }
+
+        public ObservableCollection<string> Errors { get; }
 
         public ObservableCollection<GoogleAccountModel> accounts;
         public ObservableCollection<GoogleAccountModel> Accounts

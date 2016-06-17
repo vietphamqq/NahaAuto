@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Syncfusion.XlsIO;
-using System.Linq;
 
 namespace NahaAuto.Code
 {
@@ -14,7 +13,10 @@ namespace NahaAuto.Code
 
         protected Dictionary<string, int> HeaderMapping;
 
+        public IEnumerable<string> Errors { get; private set; }
+
         protected int RowData;
+
         protected ParseExcelBase(string filePath)
         {
             try
@@ -30,7 +32,19 @@ namespace NahaAuto.Code
                 ExcelEngine = null;
                 Application = null;
                 Workbook = null;
+
+                AddError(ex.Message);
             }
+        }
+
+        protected void AddError(string error)
+        {
+            if (Errors == null)
+            {
+                Errors = new List<string>();
+            }
+
+            (Errors as List<string>).Add(error);
         }
 
         public abstract T Parse(int row);
